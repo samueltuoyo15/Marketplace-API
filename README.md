@@ -1,47 +1,52 @@
-# Marketplace API 
+# Marketplace API
 
 ## Overview
-A high-performance e-commerce backend architecture built with NestJS, TypeScript, and TypeORM. This system implements a robust role-based access control (RBAC) model for buyers and sellers, utilizing PostgreSQL for persistence and JWT for stateless authentication.
+A high-performance e-commerce backend architecture built with **NestJS**, **TypeScript**, and **TypeORM**. This system implements a robust **Role-Based Access Control (RBAC)** model for buyers and sellers, utilizing **PostgreSQL** for persistence and **JWT** for stateless authentication.
 
 ## Features
-- NestJS: Modular architecture for scalable enterprise applications.
-- TypeORM: Advanced Data Mapper pattern for PostgreSQL database management.
-- Passport & JWT: Secure authentication flow with customized strategy implementation.
-- Role-Based Access Control: Specialized decorators and guards for 'buyer', 'seller', and 'admin' roles.
-- Argon2: Industry-standard password hashing and security.
-- Docker Integration: Pre-configured containerization for the database environment.
+- **NestJS**: Modular architecture for scalable enterprise applications.
+- **TypeORM**: Advanced Data Mapper pattern for PostgreSQL database management.
+- **Passport & JWT**: Secure authentication flow with customized strategy implementation.
+- **RBAC**: Specialized decorators and guards for `buyer`, `seller`, and `admin` roles.
+- **Argon2**: Industry-standard password hashing and security.
+- **Docker Integration**: Pre-configured containerization for the database environment.
 
-## Technologies Used
+## 🛠 Technologies Used
 | Technology | Purpose |
 | :--- | :--- |
-| TypeScript | Type-safe development |
-| NestJS | Framework architecture |
-| PostgreSQL | Relational database |
-| TypeORM | Object-Relational Mapping |
-| Docker | Environment orchestration |
-| Argon2 | Cryptographic hashing |
+| **TypeScript** | Type-safe development |
+| **NestJS** | Framework architecture |
+| **PostgreSQL** | Relational database |
+| **TypeORM** | Object-Relational Mapping |
+| **Docker** | Environment orchestration |
+| **Argon2** | Cryptographic hashing |
 
-## Getting Started
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/samueltuoyo15/Marketplace-API
-   ```
-2. Install project dependencies:
-   ```bash
-   npm install
-   ```
-3. Initialize the database container:
-   ```bash
-   docker-compose up -d
-   ```
-4. Start the application:
-   ```bash
-   npm run start:dev
-   ```
+---
 
-### Environment Variables
-Create a `.env` file in the root directory and populate it with the following configuration:
+## Project Setup
+
+### 1. Prerequisites
+Ensure you have the following installed:
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Docker](https://www.docker.com/) & Docker Compose
+- [pnpm](https://pnpm.io/) (optional, but recommended)
+
+### 2. Installation
+Clone the repository:
+```bash
+git clone https://github.com/samueltuoyo15/Marketplace-API
+cd marketplace-place-api
+```
+
+Install dependencies:
+```bash
+npm install
+# or
+pnpm install
+```
+
+### 3. Environment Configuration
+Create a `.env` file in the root directory:
 ```env
 PORT=8080
 DATABASE_HOST=localhost
@@ -53,144 +58,121 @@ JWT_SECRET_KEY=your_complex_secret_key_here
 JWT_EXPIRES_IN=3600s
 ```
 
-## API Documentation
-### Base URL
-`http://localhost:8080`
+### 4. Database Setup
+Start the PostgreSQL container:
+```bash
+docker-compose up -d
+```
 
-### JWT Payload Structure
+### 5. Running the Application
+```bash
+# Development mode
+npm run start:dev
+```
+
+---
+
+## Authentication & RBAC Enforcement
+
+### JWT Implementation
+The API uses **Stateless JWT Authentication**. Upon successful login or registration, the server issues a signed JWT. This token must be included in the `Authorization` header as a Bearer token for protected routes.
+
+### RBAC (Role-Based Access Control)
+Role enforcement is handled via a combination of:
+1.  **Roles Decorator**: A custom decorator (`@Roles('admin', 'seller')`) used to attach required roles to specific routes.
+2.  **Roles Guard**: A global or method-level guard that:
+    -   Extracts the JWT from the request.
+    -   Decodes the user's role.
+    -   Compares it against the metadata set by the `@Roles` decorator.
+    -   Throws a `403 Forbidden` exception if the role is insufficient.
+
+### Sample JWT Payload Structure
 ```json
 {
   "user_id": 10,
-  "role": "buyer"
+  "role": "buyer",
+  "iat": 1734523053,
+  "exp": 1734526653
 }
 ```
 
-### Endpoints
+---
 
-#### POST /auth/register
-**Request**:
-```json
-{
+## API Endpoints & Usage
+
+### Base URL
+`http://localhost:8080`
+
+### 1. Authentication
+#### Register a New User
+```bash
+curl -X POST http://localhost:8080/auth/register \
+-H "Content-Type: application/json" \
+-d '{
   "email": "user@example.com",
   "password": "SecurePassword123",
   "role": "buyer"
-}
+}'
 ```
-**Response**:
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-**Errors**:
-- 409: Account exists already
 
-#### POST /auth/login
-**Request**:
-```json
-{
+#### Login
+```bash
+curl -X POST http://localhost:8080/auth/login \
+-H "Content-Type: application/json" \
+-d '{
   "email": "user@example.com",
   "password": "SecurePassword123"
-}
+}'
 ```
-**Response**:
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-**Errors**:
-- 404: Invalid credentials
-- 401: Invalid credentials
 
-#### POST /products
-**Security**: Requires JWT and 'seller' role.
-**Request**:
-```json
-{
+### 2. Products (Seller Operations)
+#### Create a Product
+Requires `seller` role.
+```bash
+curl -X POST http://localhost:8080/products \
+-H "Authorization: Bearer YOUR_JWT_TOKEN" \
+-H "Content-Type: application/json" \
+-d '{
   "name": "Professional Camera",
   "price": 1200.50
-}
-```
-**Response**:
-```json
-{
-  "id": 1,
-  "name": "Professional Camera",
-  "price": 1200.50,
-  "sellerId": 5
-}
-```
-**Errors**:
-- 401: Unauthorized
-- 403: Access denied
-
-#### GET /products
-**Request**:
-`No payload required`
-**Response**:
-```json
-[
-  {
-    "id": 1,
-    "name": "Professional Camera",
-    "price": "1200.50",
-    "sellerId": 5
-  }
-]
+}'
 ```
 
-#### POST /orders
-**Security**: Requires JWT and 'buyer' role.
-**Request**:
-```json
-{
+#### List All Products
+Public access.
+```bash
+curl -X GET http://localhost:8080/products
+```
+
+### 3. Orders (Buyer Operations)
+#### Place an Order
+Requires `buyer` role.
+```bash
+curl -X POST http://localhost:8080/orders \
+-H "Authorization: Bearer YOUR_JWT_TOKEN" \
+-H "Content-Type: application/json" \
+-d '{
   "productId": "1",
   "quantity": 2
-}
-```
-**Response**:
-```json
-{
-  "id": 1,
-  "productId": "1",
-  "quantity": 2,
-  "buyerId": 10
-}
-```
-**Errors**:
-- 403: Access denied
-
-#### GET /orders/me
-**Security**: Requires JWT.
-**Request**:
-`No payload required`
-**Response**:
-```json
-[
-  {
-    "id": 1,
-    "productId": "1",
-    "buyerId": 10,
-    "quantity": 2
-  }
-]
+}'
 ```
 
-## Contributing
-- Fork the repository and create a feature branch.
-- Maintain consistent coding styles as defined in `.prettierrc` and `eslint.config.mjs`.
-- Ensure all tests pass by running `npm run test`.
-- Submit a detailed Pull Request for review.
+#### View My Orders
+Requires authentication.
+```bash
+curl -X GET http://localhost:8080/orders/me \
+-H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
 
-## Author Info
+## Author
 **Samuel Tuoyo**
-- GitHub: [samueltuoyo15](https://github.com/samueltuoyo15)
-- Twitter: [TuoyoSamuel](https://x.com/TuoyoSamuel)
+- GitHub: [@samueltuoyo15](https://github.com/samueltuoyo15)
+- Twitter: [@TuoyoSamuel](https://x.com/TuoyoSamuel)
+
+---
 
 ![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-[![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)

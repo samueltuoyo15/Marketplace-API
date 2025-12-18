@@ -4,6 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './modules/users/user.entity';
 import { Product } from './modules/products/product.entity';
 import { Order } from './modules/orders/order.entity';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { ProductsModule } from './modules/products/products.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { Order } from './modules/orders/order.entity';
       synchronize: true,
       autoLoadEntities: true,
     }),
+    AuthModule,
+    UsersModule,
+    ProductsModule,
+    OrdersModule,
   ],
   providers: [],
 })
