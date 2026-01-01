@@ -11,7 +11,7 @@ A high-performance e-commerce backend architecture built with **NestJS**, **Type
 - **Argon2**: Industry-standard password hashing and security.
 - **Docker Integration**: Pre-configured containerization for the database environment.
 
-## 🛠 Technologies Used
+## Technologies Used
 | Technology | Purpose |
 | :--- | :--- |
 | **TypeScript** | Type-safe development |
